@@ -1,0 +1,17 @@
+Touch The Ball by Dylan Taylor
+------------------------------
+
+An attempt at making a basic game for the Android platform.
+The idea is to have a basic circle bouncing around the screen, and have a
+timer (based on the difficulty) that the user must tap the ball within.
+As the user progresses through levels, the ball will bounce faster.
+If the user taps and misses, one seconds will be subtracted from the time left.
+
+Difficulties and Timer Length:
+  Easy        12 Seconds
+  Medium      9 Seconds
+  Hard        6 Seconds
+  Insane      3 Seconds
+
+This program is free software. You can modify and redistribute it under the terms
+of version 2 of the GNU General Public License.
