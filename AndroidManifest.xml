@@ -1,1 +1,20 @@
-/home/dylan/NetBeansProjects/TouchTheBall/AndroidManifest.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+     package="com.dylantaylor.ttb">
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <application android:icon="@drawable/icon" android:label="@string/app_name">
+        <activity android:name=".TTB" android:label="@string/app_name"
+        android:screenOrientation="portrait" android:windowSoftInputMode="stateAlwaysHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".AboutDialog" android:label="@string/about_title"
+    android:theme="@android:style/Theme.Dialog" android:windowSoftInputMode="stateAlwaysHidden">
+        </activity>
+        <activity android:name=".TTBView" android:label="@string/app_name"
+        android:screenOrientation="portrait" android:windowSoftInputMode="stateAlwaysHidden">
+        </activity>
+    </application>
+</manifest>

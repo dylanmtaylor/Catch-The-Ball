@@ -54,12 +54,7 @@ containing a value of this type.
         public static final int insane_label=0x7f05000b;
         public static final int main_title=0x7f050001;
         public static final int medium_label=0x7f050009;
-        public static final int mode_lose_prefix=0x7f05000e;
-        public static final int mode_lose_suffix=0x7f05000f;
-        public static final int mode_pause=0x7f05000d;
-        public static final int mode_ready=0x7f05000c;
         public static final int start_label=0x7f050003;
-        public static final int ttb_layout_text_text=0x7f050010;
     }
     public static final class styleable {
         /** Attributes that can be used with a TileView.

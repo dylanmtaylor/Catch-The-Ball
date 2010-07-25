@@ -10,17 +10,14 @@
     <string name="about_text">I started this project in order to learn how to create Android applications.
         The object of the game is to tap on the ball bouncing around the screen before the timer runs out.
         As you progress through levels, your reflexes will be challenged by the gradually increasing speed of the ball.
-        The higher the difficulty, the less time you have. 
-        Although easy mode gives you plenty of time with 20 seconds, insane mode only gives you 5.\n\n
+        The higher the difficulty, the less time you have.
+        If you miss the ball, you lose a second.
+        Run out of time, and you lose.
+        Although easy mode gives you plenty of time with 12 seconds, insane mode only gives you 3.\n\n
         <i>Are you up to the challenge?</i>
     </string>
     <string name="easy_label">Easy Mode</string>
     <string name="medium_label">Medium Mode</string>
     <string name="hard_label">Hard Mode</string>
     <string name="insane_label">Insane Mode</string>
-    <string name="mode_ready">Touch The Ball\nPress Menu To Play</string>
-    <string name="mode_pause">Paused\nPress Menu To Resume</string>
-    <string name="mode_lose_prefix">Game Over\nScore: </string>
-    <string name="mode_lose_suffix">\nPress Menu To Play</string>
-    <string name="ttb_layout_text_text"></string>
 </resources>
