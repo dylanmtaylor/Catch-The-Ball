@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="app_name">Touch The Ball</string>
+    <string name="main_title">Touch The Ball</string>
+    <string name="credit_title">by Dylan Taylor</string>
+    <string name="start_label">Start Game</string>
+    <string name="about_label">About Game</string>
+    <string name="exit_label">Exit Game</string>
+    <string name="about_title">About Touch The Ball</string>
+    <string name="about_text">I started this project in order to learn how to create Android applications.
+        The object of the game is to tap on the ball bouncing around the screen before the timer runs out.
+        As you progress through levels, your reflexes will be challenged by the gradually increasing speed of the ball.
+        The higher the difficulty, the less time you have. 
+        Although easy mode gives you plenty of time with 20 seconds, insane mode only gives you 5.\n\n
+        <i>Are you up to the challenge?</i>
+    </string>
+    <string name="easy_label">Easy Mode</string>
+    <string name="medium_label">Medium Mode</string>
+    <string name="hard_label">Hard Mode</string>
+    <string name="insane_label">Insane Mode</string>
+    <string name="mode_ready">Touch The Ball\nPress Menu To Play</string>
+    <string name="mode_pause">Paused\nPress Menu To Resume</string>
+    <string name="mode_lose_prefix">Game Over\nScore: </string>
+    <string name="mode_lose_suffix">\nPress Menu To Play</string>
+    <string name="ttb_layout_text_text"></string>
+</resources>
