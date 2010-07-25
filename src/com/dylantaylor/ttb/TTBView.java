@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.WindowManager;
+import com.nullwire.trace.ExceptionHandler;
 
 /**
  *
@@ -63,6 +64,7 @@ public class TTBView extends Activity implements OnTouchListener {
         //Prevent the screen from dimming during the game.
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "DoNotDimScreen");
+        ExceptionHandler.register(this);
         setContentView(new Panel(this));
     }
 
