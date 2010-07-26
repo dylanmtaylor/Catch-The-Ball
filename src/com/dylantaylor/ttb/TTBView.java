@@ -13,7 +13,6 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.WindowManager;
-import com.nullwire.trace.ExceptionHandler;
 
 /**
  *
@@ -36,23 +35,19 @@ public class TTBView extends Activity implements OnTouchListener {
     //boolean values
     private boolean firstdraw = true; //whether the screen is being drawn for the first time. used for optimization
     private boolean newBall = true; //the previous ball was successfully clicked; redraw a new one at a random location within the border
-    //Bitmap resources
-    final Bitmap block = BitmapFactory.decodeResource(getResources(), R.drawable.block); //block image for the border
-    final Bitmap bg = BitmapFactory.decodeResource(getResources(), R.drawable.bmmini); //tiled background image
-    final Bitmap ball = BitmapFactory.decodeResource(getResources(), R.drawable.ball); //ball image
     //sizes of resources; checked only once for optimization
-    final private short blockHeight = (short) block.getHeight();
-    final private short blockWidth = (short) block.getWidth();
-    final private short bgHeight = (short) bg.getHeight();
-    final private short bgWidth = (short) bg.getWidth();
-    final private short ballHeight = (short) ball.getHeight();
-    final private short ballWidth = (short) ball.getWidth();
-    //Boundaries of the area within the border
-    private short tb = (short) blockHeight; //top boundary
-    private short lb = (short) blockWidth; //left boundary
-    private short bb = 0; //bottom boundary; changes later
-    private short rb = 0; //right boundary; changes later
-    
+    private short blockHeight;
+    private short blockWidth;
+    private short bgHeight;
+    private short bgWidth;
+    private short ballHeight;
+    private short ballWidth;
+    //Boundaries of the area within the border; changes later
+    private short tb = 0; //top boundary
+    private short lb = 0; //left boundary
+    private short bb = 0; //bottom boundary
+    private short rb = 0; //right boundary
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,7 +59,6 @@ public class TTBView extends Activity implements OnTouchListener {
         //Prevent the screen from dimming during the game.
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "DoNotDimScreen");
-        ExceptionHandler.register(this);
         setContentView(new Panel(this));
     }
 
@@ -98,10 +92,24 @@ public class TTBView extends Activity implements OnTouchListener {
         @Override
         public void onDraw(Canvas canvas) {
             canvas.drawColor(Color.BLACK);
-            //if it's the first draw, set the screen height and width values.
+            //Load Bitmap resources
+            Bitmap block = BitmapFactory.decodeResource(getResources(), R.drawable.block); //block image for the border
+            Bitmap bg = BitmapFactory.decodeResource(getResources(), R.drawable.bmmini); //tiled background image
+            Bitmap ball = BitmapFactory.decodeResource(getResources(), R.drawable.ball); //ball image
             if (firstdraw) {
+                //Calculate sizes
+                blockHeight = (short) block.getHeight();
+                blockWidth = (short) block.getWidth();
+                bgHeight = (short) bg.getHeight();
+                bgWidth = (short) bg.getWidth();
+                ballHeight = (short) ball.getHeight();
+                ballWidth = (short) ball.getWidth();
+                //Determine screen resolution
                 sHeight = (short) this.getHeight();
                 sWidth = (short) this.getWidth();
+                //Set top and left boundaries
+                tb = blockHeight;
+                lb = blockWidth;
                 firstdraw = false;
             }
             //draw background
