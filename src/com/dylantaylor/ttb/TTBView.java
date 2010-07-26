@@ -32,6 +32,10 @@ public class TTBView extends Activity implements OnTouchListener {
     //short integers containing the screen resolution. set during first draw.
     private short sHeight = 0; //screen height in pixels
     private short sWidth = 0; //screen width in pixels
+    //create null Bitmap resources
+    Bitmap block = null; //block image for the border
+    Bitmap bg = null; //tiled background image
+    Bitmap ball = null; //ball image
     //boolean values
     private boolean firstdraw = true; //whether the screen is being drawn for the first time. used for optimization
     private boolean newBall = true; //the previous ball was successfully clicked; redraw a new one at a random location within the border
@@ -59,6 +63,20 @@ public class TTBView extends Activity implements OnTouchListener {
         //Prevent the screen from dimming during the game.
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "DoNotDimScreen");
+        //Load Bitmap resources
+        block = BitmapFactory.decodeResource(getResources(), R.drawable.block); //block image for the border
+        bg = BitmapFactory.decodeResource(getResources(), R.drawable.bmmini); //tiled background image
+        ball = BitmapFactory.decodeResource(getResources(), R.drawable.ball); //ball image
+        //Calculate sizes
+        blockHeight = (short) block.getHeight();
+        blockWidth = (short) block.getWidth();
+        bgHeight = (short) bg.getHeight();
+        bgWidth = (short) bg.getWidth();
+        ballHeight = (short) ball.getHeight();
+        ballWidth = (short) ball.getWidth();
+        //Set top and left boundaries
+        tb = blockHeight;
+        lb = blockWidth;
         setContentView(new Panel(this));
     }
 
@@ -92,24 +110,10 @@ public class TTBView extends Activity implements OnTouchListener {
         @Override
         public void onDraw(Canvas canvas) {
             canvas.drawColor(Color.BLACK);
-            //Load Bitmap resources
-            Bitmap block = BitmapFactory.decodeResource(getResources(), R.drawable.block); //block image for the border
-            Bitmap bg = BitmapFactory.decodeResource(getResources(), R.drawable.bmmini); //tiled background image
-            Bitmap ball = BitmapFactory.decodeResource(getResources(), R.drawable.ball); //ball image
             if (firstdraw) {
-                //Calculate sizes
-                blockHeight = (short) block.getHeight();
-                blockWidth = (short) block.getWidth();
-                bgHeight = (short) bg.getHeight();
-                bgWidth = (short) bg.getWidth();
-                ballHeight = (short) ball.getHeight();
-                ballWidth = (short) ball.getWidth();
                 //Determine screen resolution
                 sHeight = (short) this.getHeight();
                 sWidth = (short) this.getWidth();
-                //Set top and left boundaries
-                tb = blockHeight;
-                lb = blockWidth;
                 firstdraw = false;
             }
             //draw background
