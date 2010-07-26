@@ -48,27 +48,19 @@ public class TTB extends Activity implements OnClickListener {
         aboutButton.setOnClickListener(this);
     }
 
-    public void onClick(View v) {
-        switch (v.getId()) {
+    public void onClick(View view) {
+        switch (view.getId()) {
             case R.id.easy_button:
-                Intent e = new Intent(this, TTBView.class);
-                e.putExtra("timer", 12);
-                startActivity(e);
+                startGame(12);
                 break;
             case R.id.medium_button:
-                Intent m = new Intent(this, TTBView.class);
-                m.putExtra("timer", 9);
-                startActivity(m);
+                startGame(9);
                 break;
             case R.id.hard_button:
-                Intent h = new Intent(this, TTBView.class);
-                h.putExtra("timer", 6);
-                startActivity(h);
+                startGame(6);
                 break;
             case R.id.insane_button:
-                Intent i = new Intent(this, TTBView.class);
-                i.putExtra("timer", 3);
-                startActivity(i);
+                startGame(3);
                 break;
             case R.id.about_button:
                 Intent a = new Intent(this, AboutDialog.class);
@@ -78,5 +70,12 @@ public class TTB extends Activity implements OnClickListener {
                 this.finish();
                 break;
         }
+    }
+
+    private void startGame(int time) { //starts the game, with a 'time' second limit
+        Intent intent = new Intent(this, TTBView.class); //creates a new intent
+        intent.putExtra("timer", time); //adds timer data to the intent
+        sendBroadcast(intent); //should send the timer data to the activity
+        startActivity(intent); //starts the activity
     }
 }
