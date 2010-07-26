@@ -21,6 +21,7 @@ import android.view.WindowManager;
 public class TTBView extends Activity implements OnTouchListener {
 
     private PowerManager.WakeLock wl;
+    private Bundle data = getIntent().getExtras();
     //short integers used to determine where the user pressed on the screen
     private short x = 0; //finger x coordinate
     private short y = 0; //finger y coordinate
@@ -51,6 +52,12 @@ public class TTBView extends Activity implements OnTouchListener {
     private short lb = 0; //left boundary
     private short bb = 0; //bottom boundary
     private short rb = 0; //right boundary
+    //Gameplay related variables
+    private short timer = data.getShort("timer");
+    private short level = 1; //current level; defaults to 1.
+    private int delay = 810; //delay in miliseconds before updating ball location
+    private float deltaX;
+    private float deltaY;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -92,6 +99,18 @@ public class TTBView extends Activity implements OnTouchListener {
         wl.acquire();
     }
 
+    private void levelUp() {
+        level++;
+        if (level >= 100) {
+            //congratulations message will go here...
+        }
+        delay = (short) (1000 - (9.5 * level)); //allows delay to range from 990 to 50 over 100 levels
+    }
+
+    private short rand(int min, int max) { //random number generator
+        return (short) ((Math.random() * max) + min);
+    }
+
     public boolean onTouch(View v, MotionEvent e) {
         //Only record it as a press if they press down, not if they let go.
         if (e.getAction() == MotionEvent.ACTION_DOWN) {
@@ -101,7 +120,8 @@ public class TTBView extends Activity implements OnTouchListener {
         return true;
     }
 
-    class Panel extends View {
+    class Panel
+            extends View {
 
         public Panel(Context context) {
             super(context);
@@ -143,9 +163,18 @@ public class TTBView extends Activity implements OnTouchListener {
                 }
             }
             if (newBall) {
-                //draw ball at the center of the screen; random location coming soon.
-                canvas.drawBitmap(ball, ((sWidth / 2) - (ballWidth / 2)), ((sHeight / 2) - (ballHeight / 2)), null);
+                /* Draw ball in center of the screen; deprecated:
+                 * canvas.drawBitmap(ball, ((sWidth / 2) - (ballWidth / 2)), ((sHeight / 2) - (ballHeight / 2)), null);
+                 */
+                //determine which direction the ball will be traveling in
+                deltaX = (rand(0, 1) == 0) ? -1 : 1;
+                deltaY = (rand(0, 1) == 0) ? -1 : 1;
+                //spawn the ball in a random location, making sure it's not on top of the border
+                bx = rand((lb + 1), (rb - ballWidth - 1));
+                by = rand((tb + 1), (bb - ballHeight - 1));
+                canvas.drawBitmap(ball, bx, by, null);
             } else {
+                //updateBall();
                 canvas.drawBitmap(ball, bx, by, null);
             }
         }
