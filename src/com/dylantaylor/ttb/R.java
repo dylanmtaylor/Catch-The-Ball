@@ -9,14 +9,6 @@ package com.dylantaylor.ttb;
 
 public final class R {
     public static final class attr {
-        /** <p>Must be an integer value, such as "<code>100</code>".
-<p>This may also be a reference to a resource (in the form
-"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
-theme attribute (in the form
-"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
-containing a value of this type.
-         */
-        public static final int tileSize=0x7f010000;
     }
     public static final class color {
         public static final int background=0x7f040000;
@@ -56,33 +48,4 @@ containing a value of this type.
         public static final int medium_label=0x7f050009;
         public static final int start_label=0x7f050003;
     }
-    public static final class styleable {
-        /** Attributes that can be used with a TileView.
-           <p>Includes the following attributes:</p>
-           <table>
-           <colgroup align="left" />
-           <colgroup align="left" />
-           <tr><th>Attribute</th><th>Description</th></tr>
-           <tr><td><code>{@link #TileView_tileSize com.dylantaylor.ttb:tileSize}</code></td><td></td></tr>
-           </table>
-           @see #TileView_tileSize
-         */
-        public static final int[] TileView = {
-            0x7f010000
-        };
-        /**
-          <p>This symbol is the offset where the {@link com.dylantaylor.ttb.R.attr#tileSize}
-          attribute's value can be found in the {@link #TileView} array.
-
-
-          <p>Must be an integer value, such as "<code>100</code>".
-<p>This may also be a reference to a resource (in the form
-"<code>@[<i>package</i>:]<i>type</i>:<i>name</i></code>") or
-theme attribute (in the form
-"<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>")
-containing a value of this type.
-          @attr name android:tileSize
-        */
-        public static final int TileView_tileSize = 0;
-    };
 }
