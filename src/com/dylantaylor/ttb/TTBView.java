@@ -163,7 +163,7 @@ public class TTBView extends Activity {
     }
 
     public void showDebugInfo() {
-        //for debugging
+        //for debugging purposes
         duration = Toast.LENGTH_LONG;
         displayMessage(new StringBuilder("Last touched: ").append(x).append(",").append(y).append("\nBall location:").append(bulx).append(",").append(buly).append("\nScreen size: ").append(sWidth).append(",").append(sHeight).append("\nRight Border: ").append(rb).append("\nBottom Border: ").append(bb).toString());
     }
@@ -213,8 +213,8 @@ public class TTBView extends Activity {
     }
 
     public void displayMessage(CharSequence text) {
-        toast.cancel(); //close previous message if one exists
         toast = Toast.makeText(context, text, duration);
+        toast.cancel(); //close previous message if one exists        
         toast.show();
     }
 
