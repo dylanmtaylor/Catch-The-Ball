@@ -41,11 +41,17 @@ public class TTBView extends Activity {
     private int buly; //ball y coordinate (upper left corner)
     private int blrx; //ball x coordinate (lower right corner)
     private int blry; //ball y coordinate (lower right corner)
+    //short integers containing the previous location of the ball on the screen
+    private int boldx; //previous x coordinate
+    private int boldy; //previous y coordinate
     private int bxc; //ball approximate center x coordinate
     private int byc; //ball approximate center y coordinate
     //short integers containing the screen resolution. set during first draw.
     public static short sHeight = 0; //screen height in pixels
     public static short sWidth = 0; //screen width in pixels
+    //integers containing approximately 1/3 the screen height (truncated)
+    public static short tHeight = 0;
+    public static short tWidth = 0;
     //create null Bitmap resources
     Bitmap block = null; //block image for the border
     Bitmap bg = null; //tiled background image
@@ -258,7 +264,6 @@ public class TTBView extends Activity {
                     }
                 }
             }
-
             if (newBall) {
                 /* Draw ball in center of the screen, works perfectly; deprecated:
                  * bx = ((sWidth / 2) - (ballWidth / 2));
@@ -268,13 +273,26 @@ public class TTBView extends Activity {
                 deltaX = (random(0, 1) == 0) ? -1 : 1;
                 deltaY = (random(0, 1) == 0) ? -1 : 1;
                 //spawn the ball in a random location, making sure it's not on top of the border or within 5 pixels of it
-                bulx = random((lb + 5), (rb - ballWidth - 5));
-                buly = random((tb + 5), (bb - ballHeight - 5));
+                if (!firstdraw) {
+                    boldx = bulx;
+                    boldy = buly;
+                    //ensures the ball spawns reasonably far away from the old location
+                    while ((Math.abs(bulx - boldx) < tWidth) && (Math.abs(buly - boldy) < tHeight)) {
+                        bulx = random((lb + 5), (rb - ballWidth - 5));
+                        buly = random((tb + 5), (bb - ballHeight - 5));
+                    }
+                } else {
+                    //spawn the ball for the first time
+                    bulx = random((lb + 5), (rb - ballWidth - 5));
+                    buly = random((tb + 5), (bb - ballHeight - 5));
+                    //it's no longer the first draw
+                    firstdraw = false;
+                }
                 newBall = false;
             } else {
                 //if we hit one of the boundaries, reverse the direction of the ball
-                deltaX = (((bulx + deltaX) >= lb) && ((bulx + deltaX) < rb)) ? deltaX : (deltaX * -1);
-                deltaY = (((buly + deltaY) >= tb) && ((buly + deltaY) < bb)) ? deltaY : (deltaY * -1);
+                deltaX = (((bulx + deltaX) >= lb) && ((bulx + deltaX) <= rb)) ? deltaX : (deltaX * -1);
+                deltaY = (((buly + deltaY) >= tb) && ((buly + deltaY) <= bb)) ? deltaY : (deltaY * -1);
                 //update the location of the ball
                 bulx += deltaX;
                 buly += deltaY;
