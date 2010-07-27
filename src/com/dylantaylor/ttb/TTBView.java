@@ -220,7 +220,7 @@ public class TTBView extends Activity {
 
     public void displayMessage(CharSequence text) {
         toast = Toast.makeText(context, text, duration);
-        toast.cancel(); //close previous message if one exists        
+        toast.cancel(); //close previous message if one exists
         toast.show();
     }
 
@@ -267,7 +267,7 @@ public class TTBView extends Activity {
             if (newBall) {
                 /* Draw ball in center of the screen, works perfectly; deprecated:
                  * bx = ((sWidth / 2) - (ballWidth / 2));
-                 * by = ((sHeight / 2) - (ballHeight / 2)); 
+                 * by = ((sHeight / 2) - (ballHeight / 2));
                  */
                 //determine which direction the ball will be traveling in
                 deltaX = (random(0, 1) == 0) ? -1 : 1;
@@ -277,10 +277,10 @@ public class TTBView extends Activity {
                     boldx = bulx;
                     boldy = buly;
                     //ensures the ball spawns reasonably far away from the old location
-                    while ((Math.abs(bulx - boldx) < tWidth) && (Math.abs(buly - boldy) < tHeight)) {
+                    do {
                         bulx = random((lb + 5), (rb - ballWidth - 5));
                         buly = random((tb + 5), (bb - ballHeight - 5));
-                    }
+                    } while ((Math.abs(bulx - boldx) < tWidth) || (Math.abs(buly - boldy) < tHeight));
                 } else {
                     //spawn the ball for the first time
                     bulx = random((lb + 5), (rb - ballWidth - 5));
