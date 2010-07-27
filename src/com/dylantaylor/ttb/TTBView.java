@@ -6,33 +6,46 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.os.PowerManager;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 /**
  *
  * @author Dylan Taylor
  */
-public class TTBView extends Activity implements OnTouchListener {
+public class TTBView extends Activity {
 
+    private final boolean debug = true;
+    private Paint drawColor = new Paint();
     private PowerManager.WakeLock wl;
-    private Bundle data = getIntent().getExtras();
+    private Context context; //application context
+    private int duration = Toast.LENGTH_LONG; //duration for "Toast" message
+    private Toast toast; //toast message object
+    private RefreshHandler refreshHandler = new RefreshHandler();
+    private static Panel gamePanel;
+    //private Bundle data = getIntent().getExtras();
     //short integers used to determine where the user pressed on the screen
     private short x = 0; //finger x coordinate
     private short y = 0; //finger y coordinate
     //short integers containing the current location of the ball on the screen
-    private short bx; //ball x coordinate (upper left corner)
-    private short by; //ball y coordinate (upper left corner)
-    private short bcx; //ball center x coordinate
-    private short bcy; //ball center y coordinate
+    private int bulx; //ball x coordinate (upper left corner)
+    private int buly; //ball y coordinate (upper left corner)
+    private int blrx; //ball x coordinate (lower right corner)
+    private int blry; //ball y coordinate (lower right corner)
+    private int bxc; //ball approximate center x coordinate
+    private int byc; //ball approximate center y coordinate
     //short integers containing the screen resolution. set during first draw.
-    private short sHeight = 0; //screen height in pixels
-    private short sWidth = 0; //screen width in pixels
+    public static short sHeight = 0; //screen height in pixels
+    public static short sWidth = 0; //screen width in pixels
     //create null Bitmap resources
     Bitmap block = null; //block image for the border
     Bitmap bg = null; //tiled background image
@@ -53,11 +66,28 @@ public class TTBView extends Activity implements OnTouchListener {
     private short bb = 0; //bottom boundary
     private short rb = 0; //right boundary
     //Gameplay related variables
-    private short timer = data.getShort("timer");
-    private short level = 1; //current level; defaults to 1.
-    private int delay = 810; //delay in miliseconds before updating ball location
-    private float deltaX;
-    private float deltaY;
+    private boolean gameover = false;
+    //private short timer = data.getShort("timer");
+    private short level = 0; //current level; changes to 1 upon game starting.
+    private int delay = 0; //delay in miliseconds before updating ball location
+    private float deltaX = 0;
+    private float deltaY = 0;
+    //variables related to delays and timing
+    private long lastUpdate;
+
+    class RefreshHandler extends Handler { //Makes animation possible
+
+        @Override
+        public void handleMessage(Message msg) {
+            TTBView.this.update();
+            TTBView.gamePanel.invalidate();
+        }
+
+        public void sleep(long delayMillis) {
+            this.removeMessages(0);
+            sendMessageDelayed(obtainMessage(0), delayMillis);
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -81,10 +111,17 @@ public class TTBView extends Activity implements OnTouchListener {
         bgWidth = (short) bg.getWidth();
         ballHeight = (short) ball.getHeight();
         ballWidth = (short) ball.getWidth();
-        //Set top and left boundaries
+        //Set top and left boundaries; ball tends to get stuck on these
         tb = blockHeight;
         lb = blockWidth;
-        setContentView(new Panel(this));
+        //set up the application context for toast notifications
+        context = getApplicationContext();
+        gamePanel = new Panel(this);
+        drawColor.setColor(Color.GREEN);
+        setContentView(gamePanel);
+        lastUpdate = System.currentTimeMillis();
+        update();
+        levelUp();
     }
 
     @Override
@@ -101,27 +138,87 @@ public class TTBView extends Activity implements OnTouchListener {
 
     private void levelUp() {
         level++;
+        //delay = (int) (1000 - (9.5 * level)); //allows delay to range from 990 to 50 over 100 levels
+        newBall = true;
+        gamePanel.invalidate();
+        duration = Toast.LENGTH_LONG;
+        displayMessage(new StringBuilder("Level ").append(level).toString());
         if (level >= 100) {
             //congratulations message will go here...
         }
-        delay = (short) (1000 - (9.5 * level)); //allows delay to range from 990 to 50 over 100 levels
     }
 
-    private short rand(int min, int max) { //random number generator
-        return (short) ((Math.random() * max) + min);
+    public void update() {
+        //contains some code borrowed from snake example
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastUpdate >= delay) {
+            gamePanel.invalidate();
+            lastUpdate = currentTime;
+        }
+        refreshHandler.sleep(delay);
     }
 
-    public boolean onTouch(View v, MotionEvent e) {
-        //Only record it as a press if they press down, not if they let go.
-        if (e.getAction() == MotionEvent.ACTION_DOWN) {
-            this.x = (short) e.getX();
-            this.y = (short) e.getY();
+    private static int random(int min, int max) { //random number generator
+        return (int) ((Math.random() * max) + min);
+    }
+
+    public void showDebugInfo() {
+        //for debugging
+        duration = Toast.LENGTH_LONG;
+        displayMessage(new StringBuilder("Last touched: ").append(x).append(",").append(y).append("\nBall location:").append(bulx).append(",").append(buly).append("\nScreen size: ").append(sWidth).append(",").append(sHeight).append("\nRight Border: ").append(rb).append("\nBottom Border: ").append(bb).toString());
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent msg) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) { //returns to menu
+            return super.onKeyDown(keyCode, msg);
+        } else if (keyCode == KeyEvent.KEYCODE_MENU) { //displays debugging info
+            duration = Toast.LENGTH_SHORT;
+            showDebugInfo();
+        } else if (keyCode == KeyEvent.KEYCODE_SEARCH) { //respawns ball
+            newBall = true;
+            gamePanel.invalidate();
+        } else {
+            /* do nothing */
         }
         return true;
     }
 
-    class Panel
-            extends View {
+    @Override
+    public boolean onTouchEvent(MotionEvent e) {
+        //Only record it as a press if they press down, not if they let go.
+        if (e.getAction() == MotionEvent.ACTION_DOWN) {
+            x = (short) e.getX();
+            y = (short) e.getY();
+            if ((withinRange(x, bulx, blrx)) && (withinRange(y, buly, blry))) {
+                levelUp();
+            } else {
+                if (debug) {
+                    showDebugInfo();
+                } else {
+                    duration = Toast.LENGTH_SHORT;
+                    displayMessage("Miss");
+                }
+            }
+        }
+        return true;
+    }
+
+    public boolean withinRange(int n, int r1, int r2) {
+        if ((n >= r1) && (n <= r2)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void displayMessage(CharSequence text) {
+        toast.cancel(); //close previous message if one exists
+        toast = Toast.makeText(context, text, duration);
+        toast.show();
+    }
+
+    public class Panel extends View {
 
         public Panel(Context context) {
             super(context);
@@ -129,12 +226,11 @@ public class TTBView extends Activity implements OnTouchListener {
 
         @Override
         public void onDraw(Canvas canvas) {
-            canvas.drawColor(Color.BLACK);
             if (firstdraw) {
+                canvas.drawColor(Color.BLACK);
                 //Determine screen resolution
                 sHeight = (short) this.getHeight();
                 sWidth = (short) this.getWidth();
-                firstdraw = false;
             }
             //draw background
             for (short i = 0; i < sHeight; i += bgHeight) {
@@ -143,10 +239,10 @@ public class TTBView extends Activity implements OnTouchListener {
                 }
             }
             //draw top border and right side
-            for (short i = 0; i < sHeight; i += blockWidth) {
+            for (short i = 0; i < sWidth; i += blockWidth) {
                 canvas.drawBitmap(block, i, 0, null);
                 if (i + blockHeight >= sWidth) {
-                    rb = (short) ((i * blockWidth) - blockWidth); //right boundary
+                    rb = (short) (i - ballWidth); //right boundary
                     for (int j = 0; j < sHeight; j += blockHeight) {
                         canvas.drawBitmap(block, i, j, null);
                     }
@@ -156,26 +252,51 @@ public class TTBView extends Activity implements OnTouchListener {
             for (short i = 0; i < sHeight; i += blockHeight) {
                 canvas.drawBitmap(block, 0, i, null);
                 if (i + blockHeight >= sHeight) {
-                    bb = (short) (i * blockHeight - blockHeight);
+                    bb = (short) (i - ballHeight);
                     for (int j = 0; j < sWidth; j += blockWidth) {
                         canvas.drawBitmap(block, j, i, null);
                     }
                 }
             }
+
             if (newBall) {
-                /* Draw ball in center of the screen; deprecated:
-                 * canvas.drawBitmap(ball, ((sWidth / 2) - (ballWidth / 2)), ((sHeight / 2) - (ballHeight / 2)), null);
+                /* Draw ball in center of the screen, works perfectly; deprecated:
+                 * bx = ((sWidth / 2) - (ballWidth / 2));
+                 * by = ((sHeight / 2) - (ballHeight / 2)); 
                  */
                 //determine which direction the ball will be traveling in
-                deltaX = (rand(0, 1) == 0) ? -1 : 1;
-                deltaY = (rand(0, 1) == 0) ? -1 : 1;
-                //spawn the ball in a random location, making sure it's not on top of the border
-                bx = rand((lb + 1), (rb - ballWidth - 1));
-                by = rand((tb + 1), (bb - ballHeight - 1));
-                canvas.drawBitmap(ball, bx, by, null);
+                deltaX = (random(0, 1) == 0) ? -1 : 1;
+                deltaY = (random(0, 1) == 0) ? -1 : 1;
+                //spawn the ball in a random location, making sure it's not on top of the border or within 5 pixels of it
+                bulx = random((lb + 5), (rb - ballWidth - 5));
+                buly = random((tb + 5), (bb - ballHeight - 5));
+                newBall = false;
             } else {
-                //updateBall();
-                canvas.drawBitmap(ball, bx, by, null);
+                //if we hit one of the boundaries, reverse the direction of the ball
+                deltaX = (((bulx + deltaX) >= lb) && ((bulx + deltaX) < rb)) ? deltaX : (deltaX * -1);
+                deltaY = (((buly + deltaY) >= tb) && ((buly + deltaY) < bb)) ? deltaY : (deltaY * -1);
+                //update the location of the ball
+                bulx += deltaX;
+                buly += deltaY;
+            }
+            blrx = bulx + (ballWidth - 1);
+            blry = buly + (ballHeight - 1);
+            canvas.drawBitmap(ball, bulx, buly, null); //draws the ball
+            if (debug) {
+                //Now calculate the new center of the ball
+                bxc = (bulx + (ballWidth / 2));
+                byc = (buly + (ballHeight / 2));
+                //draw a point at the approximate center of the ball
+                canvas.drawPoint(bxc, byc, drawColor);
+                //draw a square around the ball's clickable area
+                for (int i = buly; i < blry; i++) {
+                    canvas.drawPoint(bulx, i, drawColor);
+                    canvas.drawPoint(blrx, i, drawColor);
+                }
+                for (int i = bulx; i < blrx; i++) {
+                    canvas.drawPoint(i, buly, drawColor);
+                    canvas.drawPoint(i, blry, drawColor);
+                }
             }
         }
     }
