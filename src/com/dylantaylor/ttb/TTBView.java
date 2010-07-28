@@ -95,6 +95,10 @@ public class TTBView extends Activity {
     //variables related to delays and timing
     private long lastUpdate;
 
+    private void displayLevel() {
+        displayMessage(new StringBuilder("Level ").append(level).toString());
+    }
+
     class RefreshHandler extends Handler { //Makes animation possible
 
         @Override
@@ -163,13 +167,13 @@ public class TTBView extends Activity {
         //delay = (int) (1000 - (9.5 * level)); //allows delay to range from 990 to 50 over 100 levels
         newBall = true;
         gamePanel.invalidate();
-        displayMessage(new StringBuilder("Level ").append(level).toString());
+        displayLevel();
         if (level >= 100) {
             //congratulations message will go here...
         }
     }
 
-    public void update() {
+    private void update() {
         //contains some code borrowed from snake example
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastUpdate >= delay) {
@@ -185,9 +189,8 @@ public class TTBView extends Activity {
         return (int) ((Math.random() * max) + min);
     }
 
-    public void showDebugInfo() {
+    private void showDebugInfo() {
         //for debugging purposes
-
         displayMessage(new StringBuilder("Last touched: ").append(x).append(",").append(y).append("\nBall location:").append(bulX).append(",").append(bulY).append("\nScreen size: ").append(sWidth).append(",").append(sHeight).append("\nRight Border: ").append(rb).append("\nBottom Border: ").append(bb).toString());
     }
 
@@ -236,7 +239,7 @@ public class TTBView extends Activity {
         return true;
     }
 
-    public boolean withinRange(int n, int r1, int r2) {
+    private boolean withinRange(int n, int r1, int r2) {
         if ((n >= r1) && (n <= r2)) {
             return true;
         } else {
@@ -244,7 +247,7 @@ public class TTBView extends Activity {
         }
     }
 
-    public void displayMessage(CharSequence text) {
+    private void displayMessage(CharSequence text) {
         if (showNotifications) {
             toast = Toast.makeText(context, text, duration);
             toast.cancel(); //close previous message if one exists
