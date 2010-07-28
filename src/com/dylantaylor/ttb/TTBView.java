@@ -3,13 +3,13 @@ package com.dylantaylor.ttb;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
@@ -19,7 +19,9 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 
 /**
  *
@@ -29,9 +31,9 @@ public class TTBView extends Activity {
 
     private final boolean debug = true;
     private Paint drawColor = new Paint();
-    private PowerManager.WakeLock wl;
+    private PowerManager.WakeLock wakeLock;
     private Context context; //application context
-    private int duration = Toast.LENGTH_LONG; //duration for "Toast" message
+    private int duration = Toast.LENGTH_SHORT; //duration for "Toast" message
     private Bitmap environment; //used to store a pre-rendered version of the background and border
     private Toast toast; //toast message object
     private RefreshHandler refreshHandler = new RefreshHandler();
@@ -41,10 +43,10 @@ public class TTBView extends Activity {
     private short x = 0; //finger x coordinate
     private short y = 0; //finger y coordinate
     //short integers containing the current location of the ball on the screen
-    private int bulx; //ball x coordinate (upper left corner)
-    private int buly; //ball y coordinate (upper left corner)
-    private int blrx; //ball x coordinate (lower right corner)
-    private int blry; //ball y coordinate (lower right corner)
+    private int bulX; //ball x coordinate (upper left corner)
+    private int bulY; //ball y coordinate (upper left corner)
+    private int blrX; //ball x coordinate (lower right corner)
+    private int blrY; //ball y coordinate (lower right corner)
     //short integers containing the previous location of the ball on the screen
     private int boldx; //previous x coordinate
     private int boldy; //previous y coordinate
@@ -61,8 +63,11 @@ public class TTBView extends Activity {
     Bitmap bg = null; //tiled background image
     Bitmap ball = null; //ball image
     //boolean values
-    private boolean firstdraw = true; //whether the screen is being drawn for the first time. used for optimization
+    private boolean firstDraw = true; //whether the screen is being drawn for the first time. used for optimization
     private boolean newBall = true; //the previous ball was successfully clicked; redraw a new one at a random location within the border
+    private final boolean drawScenery = true; //whether or not to draw the background and borders
+    private boolean hitX = false; //whether the ball hit a boundary on the x axis
+    private boolean hitY = false; //whether the ball hit a boundary on the y axis
     //sizes of resources; checked only once for optimization
     private short blockHeight;
     private short blockWidth;
@@ -82,6 +87,8 @@ public class TTBView extends Activity {
     private int delay = 0; //delay in miliseconds before updating ball location
     private int deltaX = 0;
     private int deltaY = 0;
+    private final int startingSpeed = 1; //the speed the ball starts at on the first level
+    private final int deltaCap = 7; //prevents the ball from getting too hard to catch
     //variables related to delays and timing
     private long lastUpdate;
 
@@ -108,8 +115,8 @@ public class TTBView extends Activity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         //Prevent the screen from dimming during the game.
-        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "DoNotDimScreen");
+        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK, "DoNotDimScreen");
         //Load Bitmap resources
         block = BitmapFactory.decodeResource(getResources(), R.drawable.block); //block image for the border
         bg = BitmapFactory.decodeResource(getResources(), R.drawable.bmmini); //tiled background image
@@ -136,14 +143,14 @@ public class TTBView extends Activity {
 
     @Override
     public void onPause() {
-        super.onPause();
-        wl.release(); //release the wake lock
+        super.onStop();
+        wakeLock.release(); //release the wake lock
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        wl.acquire();
+        wakeLock.acquire();
     }
 
     private void levelUp() {
@@ -151,7 +158,6 @@ public class TTBView extends Activity {
         //delay = (int) (1000 - (9.5 * level)); //allows delay to range from 990 to 50 over 100 levels
         newBall = true;
         gamePanel.invalidate();
-        duration = Toast.LENGTH_LONG;
         displayMessage(new StringBuilder("Level ").append(level).toString());
         if (level >= 100) {
             //congratulations message will go here...
@@ -174,20 +180,26 @@ public class TTBView extends Activity {
 
     public void showDebugInfo() {
         //for debugging purposes
-        duration = Toast.LENGTH_LONG;
-        displayMessage(new StringBuilder("Last touched: ").append(x).append(",").append(y).append("\nBall location:").append(bulx).append(",").append(buly).append("\nScreen size: ").append(sWidth).append(",").append(sHeight).append("\nRight Border: ").append(rb).append("\nBottom Border: ").append(bb).toString());
+
+        displayMessage(new StringBuilder("Last touched: ").append(x).append(",").append(y).append("\nBall location:").append(bulX).append(",").append(bulY).append("\nScreen size: ").append(sWidth).append(",").append(sHeight).append("\nRight Border: ").append(rb).append("\nBottom Border: ").append(bb).toString());
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent msg) {
         if (keyCode == KeyEvent.KEYCODE_BACK) { //returns to menu
-            return super.onKeyDown(keyCode, msg);
+            finish(); //destroy this activity
+            //return super.onKeyDown(keyCode, msg);
         } else if (keyCode == KeyEvent.KEYCODE_MENU) { //displays debugging info
-            duration = Toast.LENGTH_SHORT;
-            showDebugInfo();
+            if (debug) {
+                duration = Toast.LENGTH_LONG;
+                showDebugInfo();
+                duration = Toast.LENGTH_SHORT;
+            }
         } else if (keyCode == KeyEvent.KEYCODE_SEARCH) { //respawns ball
-            newBall = true;
-            gamePanel.invalidate();
+            if (debug) {
+                newBall = true;
+                gamePanel.invalidate();
+            }
         } else {
             /* do nothing */
         }
@@ -200,13 +212,12 @@ public class TTBView extends Activity {
         if (e.getAction() == MotionEvent.ACTION_DOWN) {
             x = (short) e.getX();
             y = (short) e.getY();
-            if ((withinRange(x, bulx, blrx)) && (withinRange(y, buly, blry))) {
+            if ((withinRange(x, (bulX - Math.abs(deltaX)), (blrX + Math.abs(deltaX)))) && (withinRange(y, (bulY - Math.abs(deltaY)), (blrY + Math.abs(deltaY))))) {
                 levelUp();
             } else {
                 if (debug) {
-                    showDebugInfo();
+//                    showDebugInfo();
                 } else {
-                    duration = Toast.LENGTH_SHORT;
                     displayMessage("Miss");
                 }
             }
@@ -236,49 +247,61 @@ public class TTBView extends Activity {
 
         @Override
         public void onDraw(Canvas canvas) {
-            if (firstdraw) {
-                canvas.drawColor(Color.BLACK);
+            if (firstDraw) {
                 //Determine screen resolution
                 sHeight = (short) this.getHeight();
                 sWidth = (short) this.getWidth();
-            }
+                environment = Bitmap.createBitmap(this.getWidth(), this.getHeight(), Config.RGB_565); //allows the background and border rendering to only be done once
+                canvas = new Canvas(environment);
+                canvas.drawColor(Color.BLACK);
                 //draw background
                 for (short i = 0; i < sHeight; i += bgHeight) {
                     for (short j = 0; j < sWidth; j += bgWidth) {
-                        canvas.drawBitmap(bg, j, i, null);
+                        if (drawScenery) {
+                            canvas.drawBitmap(bg, j, i, null);
+                        }
                     }
                 }
                 //draw top border and right side
                 for (short i = 0; i < sWidth; i += blockWidth) {
-                    canvas.drawBitmap(block, i, 0, null);
+                    if (drawScenery) {
+                        canvas.drawBitmap(block, i, 0, null);
+                    }
                     if (i + blockHeight >= sWidth) {
                         rb = (short) (i - ballWidth); //right boundary
                         for (int j = 0; j < sHeight; j += blockHeight) {
-                            canvas.drawBitmap(block, i, j, null);
+                            if (drawScenery) {
+                                canvas.drawBitmap(block, i, j, null);
+                            }
                         }
                     }
                 }
                 //draw left side and bottom border
                 for (short i = 0; i < sHeight; i += blockHeight) {
-                    canvas.drawBitmap(block, 0, i, null);
+                    if (drawScenery) {
+                        canvas.drawBitmap(block, 0, i, null);
+                    }
                     if (i + blockHeight >= sHeight) {
                         bb = (short) (i - ballHeight);
                         for (int j = 0; j < sWidth; j += blockWidth) {
-                            canvas.drawBitmap(block, j, i, null);
+                            if (drawScenery) {
+                                canvas.drawBitmap(block, j, i, null);
+                            }
                         }
                     }
                 }
-            if (firstdraw) {
-                environment = Bitmap.createBitmap(this.getWidth(), this.getHeight(), Config.RGB_565); //allows the background and border rendering to only be done once
+                File file = new File(Environment.getExternalStorageDirectory(), "ttb_environment.png");
                 try {
-                    FileOutputStream fos = openFileOutput("ttb_environment.png", MODE_WORLD_READABLE);
-                    environment.compress(CompressFormat.PNG, 100, fos);
-                    fos.flush();
-                    fos.close();
+                    OutputStream outStream = new FileOutputStream(file);
+                    environment.compress(Bitmap.CompressFormat.PNG, 100, outStream);
+                    outStream.flush();
+                    outStream.close();
                 } catch (Exception e) {
                     /* do nothing */
                 }
+                canvas = new Canvas();
             }
+            canvas.drawBitmap(environment, 0, 0, drawColor);
             if (newBall) {
                 /* Draw ball in center of the screen, works perfectly; deprecated:
                  * bx = ((sWidth / 2) - (ballWidth / 2));
@@ -287,52 +310,79 @@ public class TTBView extends Activity {
                 //determine which direction the ball will be traveling in
                 deltaX = ((random(1, 2)) == 2) ? 1 : -1;
                 deltaY = ((random(1, 2)) == 2) ? 1 : -1;
-                if (level > 24) { //double the change in pixels starting at level 25
-                    deltaX *= 2;
-                    deltaY *= 2;
+                if (level > 9) { //start increasing the speed of the ball
+                    deltaX *= ((level - (level % 10)) / 10) + 1;
+                    deltaY *= ((level - (level % 10)) / 10) + 1;
+                    //cap the deltas to prevent excessive speed
+                    deltaX = (deltaX > deltaCap) ? deltaCap : deltaX;
+                    deltaX = (deltaY > deltaCap) ? deltaCap : deltaY;
+                } else { //make the ball move at the starting speed
+                    deltaX *= startingSpeed;
+                    deltaY *= startingSpeed;
                 }
                 //spawn the ball in a random location, making sure it's not on top of the border or within 5 pixels of it
-                if (!firstdraw) {
-                    boldx = bulx;
-                    boldy = buly;
+                if (!firstDraw) {
+                    boldx = bulX;
+                    boldy = bulY;
                     //ensures the ball spawns reasonably far away from the old location
                     do {
-                        bulx = random((lb + 5), (rb - ballWidth - 5));
-                        buly = random((tb + 5), (bb - ballHeight - 5));
-                    } while ((Math.abs(bulx - boldx) < tWidth) || (Math.abs(buly - boldy) < tHeight));
+                        bulX = random((lb + 5), (rb - ballWidth - 5));
+                        bulY = random((tb + 5), (bb - ballHeight - 5));
+                    } while ((Math.abs(bulX - boldx) < tWidth) || (Math.abs(bulY - boldy) < tHeight));
                 } else {
                     //spawn the ball for the first time
-                    bulx = random((lb + 5), (rb - ballWidth - 5));
-                    buly = random((tb + 5), (bb - ballHeight - 5));
+                    bulX = random((lb + 5), (rb - ballWidth - 5));
+                    bulY = random((tb + 5), (bb - ballHeight - 5));
                     //it's no longer the first draw
-                    firstdraw = false;
+                    firstDraw = false;
                 }
                 newBall = false;
             } else {
+                hitX = false;
+                hitY = false;
+                //make sure the ball touches the x boundaries if it would otherwise exceed them
+                if ((bulX + deltaX) < lb) { //if the ball exceeds the left boundary
+                    bulX = lb; //make the ball touch the left boundary
+                    hitX = true;
+                } else if ((bulX + deltaX) > rb) { //if the ball exceeds the right boundary
+                    bulX = rb; //make the ball touch the right boundary
+                    hitX = true;
+                }
+                //make sure the ball hits the y boundaries if it would otherwise exceed them
+                if ((bulY + deltaY) < tb) { //if the ball exceeds the top boundary
+                    bulY = tb; //make the ball touch the top boundary
+                    hitY = true;
+                } else if ((bulY + deltaY) > bb) { //if the ball exceeds the bottom boundary
+                    bulY = bb; //make the ball touch the bottom boundary
+                    hitY = true;
+                }
                 //if we hit one of the boundaries, reverse the direction of the ball
-                deltaX = (((bulx + deltaX) >= lb) && ((bulx + deltaX) <= rb)) ? deltaX : (deltaX * -1);
-                deltaY = (((buly + deltaY) >= tb) && ((buly + deltaY) <= bb)) ? deltaY : (deltaY * -1);
-                //update the location of the ball
-                bulx += deltaX;
-                buly += deltaY;
+                deltaX = (((bulX + deltaX) >= lb) && ((bulX + deltaX) <= rb)) ? deltaX : (deltaX * -1);
+                deltaY = (((bulY + deltaY) >= tb) && ((bulY + deltaY) <= bb)) ? deltaY : (deltaY * -1);
+                if (!hitX) {
+                    bulX += deltaX; //update the ball's location on the X axis
+                }
+                if (!hitY) {
+                    bulY += deltaY; //update the ball's location on the Y axis
+                }
             }
-            blrx = bulx + (ballWidth - 1);
-            blry = buly + (ballHeight - 1);
-            canvas.drawBitmap(ball, bulx, buly, null); //draws the ball
+            blrX = bulX + (ballWidth - 1);
+            blrY = bulY + (ballHeight - 1);
+            canvas.drawBitmap(ball, bulX, bulY, null); //draws the ball
             if (debug) {
                 //Now calculate the new center of the ball
-                bxc = (bulx + (ballWidth / 2));
-                byc = (buly + (ballHeight / 2));
+                bxc = (bulX + (ballWidth / 2));
+                byc = (bulY + (ballHeight / 2));
                 //draw a point at the approximate center of the ball
                 canvas.drawPoint(bxc, byc, drawColor);
                 //draw a square around the ball's clickable area
-                for (int i = buly; i < blry; i++) {
-                    canvas.drawPoint(bulx, i, drawColor);
-                    canvas.drawPoint(blrx, i, drawColor);
+                for (int i = bulY; i < blrY; i++) {
+                    canvas.drawPoint(bulX, i, drawColor);
+                    canvas.drawPoint(blrX, i, drawColor);
                 }
-                for (int i = bulx; i < blrx; i++) {
-                    canvas.drawPoint(i, buly, drawColor);
-                    canvas.drawPoint(i, blry, drawColor);
+                for (int i = bulX; i < blrX; i++) {
+                    canvas.drawPoint(i, bulY, drawColor);
+                    canvas.drawPoint(i, blrY, drawColor);
                 }
             }
         }
