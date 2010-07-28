@@ -66,6 +66,8 @@ public class TTBView extends Activity {
     private boolean firstDraw = true; //whether the screen is being drawn for the first time. used for optimization
     private boolean newBall = true; //the previous ball was successfully clicked; redraw a new one at a random location within the border
     private final boolean drawScenery = true; //whether or not to draw the background and borders
+    private final boolean showNotifications = false; //whether or not to show toast notifications
+    private final boolean forceLevelUp = true; //force the level to increase when search is pressed; used for debugging.
     private boolean hitX = false; //whether the ball hit a boundary on the x axis
     private boolean hitY = false; //whether the ball hit a boundary on the y axis
     //sizes of resources; checked only once for optimization
@@ -88,7 +90,7 @@ public class TTBView extends Activity {
     private int deltaX = 0;
     private int deltaY = 0;
     private final int startingSpeed = 1; //the speed the ball starts at on the first level
-    private final int deltaCap = 7; //prevents the ball from getting too hard to catch
+    private final int deltaCap = 7; //maximum speed; prevents the ball from getting too hard to catch
     //variables related to delays and timing
     private long lastUpdate;
 
@@ -197,8 +199,12 @@ public class TTBView extends Activity {
             }
         } else if (keyCode == KeyEvent.KEYCODE_SEARCH) { //respawns ball
             if (debug) {
-                newBall = true;
-                gamePanel.invalidate();
+                if (forceLevelUp) {
+                    levelUp();
+                } else {
+                    newBall = true;
+                    gamePanel.invalidate();
+                }
             }
         } else {
             /* do nothing */
@@ -234,9 +240,11 @@ public class TTBView extends Activity {
     }
 
     public void displayMessage(CharSequence text) {
-        toast = Toast.makeText(context, text, duration);
-        toast.cancel(); //close previous message if one exists
-        toast.show();
+        if (showNotifications) {
+            toast = Toast.makeText(context, text, duration);
+            toast.cancel(); //close previous message if one exists
+            toast.show();
+        }
     }
 
     public class Panel extends View {
@@ -315,7 +323,7 @@ public class TTBView extends Activity {
                     deltaY *= ((level - (level % 10)) / 10) + 1;
                     //cap the deltas to prevent excessive speed
                     deltaX = (deltaX > deltaCap) ? deltaCap : deltaX;
-                    deltaX = (deltaY > deltaCap) ? deltaCap : deltaY;
+                    deltaY = (deltaY > deltaCap) ? deltaCap : deltaY;
                 } else { //make the ball move at the starting speed
                     deltaX *= startingSpeed;
                     deltaY *= startingSpeed;
