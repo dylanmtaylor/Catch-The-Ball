@@ -308,8 +308,8 @@ public class TTBView extends Activity {
                  * by = ((sHeight / 2) - (ballHeight / 2));
                  */
                 //determine which direction the ball will be traveling in
-                deltaX = ((random(1, 2)) == 2) ? 1 : -1;
-                deltaY = ((random(1, 2)) == 2) ? 1 : -1;
+                deltaX = (((random(1, 10000)) % 2) == 0) ? 1 : -1;
+                deltaY = (((random(1, 10000)) % 2) == 0) ? 1 : -1;
                 if (level > 9) { //start increasing the speed of the ball
                     deltaX *= ((level - (level % 10)) / 10) + 1;
                     deltaY *= ((level - (level % 10)) / 10) + 1;
