@@ -66,8 +66,9 @@ public class TTBView extends Activity {
     private boolean firstDraw = true; //whether the screen is being drawn for the first time. used for optimization
     private boolean newBall = true; //the previous ball was successfully clicked; redraw a new one at a random location within the border
     private final boolean drawScenery = true; //whether or not to draw the background and borders
-    private final boolean showNotifications = false; //whether or not to show toast notifications
+    private final boolean showNotifications = true; //whether or not to show toast notifications
     private final boolean forceLevelUp = true; //force the level to increase when search is pressed; used for debugging.
+    private boolean gamePaused = false;
     private boolean hitX = false; //whether the ball hit a boundary on the x axis
     private boolean hitY = false; //whether the ball hit a boundary on the y axis
     //sizes of resources; checked only once for optimization
@@ -90,7 +91,7 @@ public class TTBView extends Activity {
     private int deltaX = 0;
     private int deltaY = 0;
     private final int startingSpeed = 1; //the speed the ball starts at on the first level
-    private final int deltaCap = 7; //maximum speed; prevents the ball from getting too hard to catch
+    private final int deltaCap = 8; //maximum speed; prevents the ball from getting too hard to catch
     //variables related to delays and timing
     private long lastUpdate;
 
@@ -145,12 +146,14 @@ public class TTBView extends Activity {
 
     @Override
     public void onPause() {
+        gamePaused = true;
         super.onStop();
         wakeLock.release(); //release the wake lock
     }
 
     @Override
     public void onResume() {
+        gamePaused = false;
         super.onResume();
         wakeLock.acquire();
     }
@@ -170,8 +173,10 @@ public class TTBView extends Activity {
         //contains some code borrowed from snake example
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastUpdate >= delay) {
-            gamePanel.invalidate();
-            lastUpdate = currentTime;
+            if (!gamePaused) {
+                gamePanel.invalidate();
+                lastUpdate = currentTime;
+            }
         }
         refreshHandler.sleep(delay);
     }
