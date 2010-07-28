@@ -328,7 +328,7 @@ public class TTBView extends Activity {
                     do {
                         bulX = random((lb + 5), (rb - ballWidth - 5));
                         bulY = random((tb + 5), (bb - ballHeight - 5));
-                    } while ((Math.abs(bulX - boldx) < tWidth) || (Math.abs(bulY - boldy) < tHeight));
+                    } while ((Math.abs(bulX - boldx) < tWidth) && (Math.abs(bulY - boldy) < tHeight));
                 } else {
                     //spawn the ball for the first time
                     bulX = random((lb + 5), (rb - ballWidth - 5));
