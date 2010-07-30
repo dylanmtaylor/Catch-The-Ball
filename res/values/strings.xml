@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
-    <string name="app_name">Touch The Ball</string>
-    <string name="main_title">Touch The Ball</string>
+    <string name="app_name">Catch The Ball</string>
+    <string name="main_title">Catch The Ball</string>
     <string name="credit_title">by Dylan Taylor</string>
     <string name="start_label">Start Game</string>
     <string name="about_label">About Game</string>
     <string name="exit_label">Exit Game</string>
-    <string name="about_title">About Touch The Ball</string>
+    <string name="about_title">About Catch The Ball</string>
     <string name="about_text">I started this project in order to learn how to create Android applications.
         The object of the game is to tap on the ball bouncing around the screen before the timer runs out.
         As you progress through levels, your reflexes will be challenged by the gradually increasing speed of the ball.
