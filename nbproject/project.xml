@@ -3,7 +3,7 @@
     <type>org.netbeans.modules.android.project</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/android-project/1">
-            <name>TouchTheBall</name>
+            <name>CatchTheBall</name>
             <minimum-ant-version>1.7.0</minimum-ant-version>
             <explicit-platform explicit-source-supported="true"/>
             <source-roots>
